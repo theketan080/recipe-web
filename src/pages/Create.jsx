@@ -17,9 +17,11 @@ const Create = () => {
     const copydata = [...data];
     copydata.push(recipe);
     setdata(copydata);
-    toast.success("New Recipe Created!")
+    localStorage.setItem("recipes", JSON.stringify(copydata));
+
+    toast.success("New Recipe Created!");
     reset();
-    navigate("/recipes")
+    navigate("/recipes");
   };
   return (
     <form onSubmit={handleSubmit(SubmitHandler)}>

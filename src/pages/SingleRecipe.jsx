@@ -1,8 +1,9 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { recipecontext } from "../context/RecipeContext";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { useEffect } from "react";
 
 const SingleRecipe = () => {
   const { data, setdata } = useContext(recipecontext);
@@ -12,41 +13,80 @@ const SingleRecipe = () => {
 
   const { register, handleSubmit, reset } = useForm({
     defaultValues: {
-      title: recipe.title,
-      chef: recipe.chef,
-      image: recipe.image,
-      inst: recipe.inst,
-      desc: recipe.desc,
-      ingr: recipe.ingr
+      title: recipe?.title,
+      chef: recipe?.chef,
+      image: recipe?.image,
+      inst: recipe?.inst,
+      desc: recipe?.desc,
+      ingr: recipe?.ingr,
     },
   });
 
-  const SubmitHandler = (recipe) => {
+  const UpdateHandler = (recipe) => {
     const index = data.findIndex((recipe) => params.id == recipe.id);
     const copydata = [...data];
     copydata[index] = { ...copydata[index], ...recipe };
     setdata(copydata);
+    localStorage.setItem("recipes", JSON.stringify(copydata));
     toast.success("Recipe Updated");
   };
 
   const DeleteHandler = () => {
     const filterdata = data.filter((r) => r.id != params.id);
     setdata(filterdata);
+    localStorage.setItem("recipes", JSON.stringify(filterdata));
     toast.success("Recipe Deleted!");
     navigate("/recipes");
   };
 
+  const [favourite, setfavourite] = useState(
+    JSON.parse(localStorage.getItem("fav")) || [],
+  );
+
+  const FavHandler = () => {
+    const copyfav = [...favourite];
+    copyfav.push(recipe);
+    setfavourite(copyfav);
+    localStorage.setItem("fav", JSON.stringify(copyfav));
+  };
+
+  const UnFavHandler = () => {
+    const filterfav = favourite.filter((f) => f.id != recipe?.id);
+    setfavourite(filterfav);
+    
+    localStorage.setItem("fav", JSON.stringify(filterfav));
+  };
+
+  useEffect(() => {
+    console.log("SingleRecipe.jsx Mounted");
+
+    return () => {
+      console.log("SingleRecipe.jsx Unmounted");
+    };
+  }, []);
+
   return (
     <div className="w-full flex">
-      <div className="left w-1/2 p-2">
-        <h1 className="text-5xl font-black">{recipe.title}</h1>
-        <img className="h-[20vh]" src={recipe.image} alt="" />
-        <h1>{recipe.chef}</h1>
-        <p>{recipe.desc}</p>
+      <div className="relative left w-1/2 p-10">
+        {favourite.find((f) => f.id == recipe?.id) ? (
+          <i
+            onClick={UnFavHandler}
+            className="right-[5%] absolute text-3xl text-red-400 ri-heart-fill"
+          ></i>
+        ) : (
+          <i
+            onClick={FavHandler}
+            className="right-[5%] absolute text-3xl text-red-400 ri-heart-line"
+          ></i>
+        )}
 
+        <h1 className="text-5xl font-black">{recipe?.title}</h1>
+        <img className="h-[20vh]" src={recipe?.image} alt="" />
+        <h1>{recipe?.chef}</h1>
+        <p>{recipe?.desc}</p>
       </div>
 
-      <form className="w-1/2 p-2" onSubmit={handleSubmit(SubmitHandler)}>
+      <form className="w-1/2 p-2" onSubmit={handleSubmit(UpdateHandler)}>
         <input
           className="block border-b outline-0 p-2"
           {...register("image")}
